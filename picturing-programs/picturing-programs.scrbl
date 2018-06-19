@@ -456,7 +456,7 @@ For example,
 
 ; count-pixels-of-color : image color -> number
 (define (count-pixels-of-color pic color-to-count)
-   (fold-image/extra count-pixels-of-color 0 pic))
+   (fold-image/extra another-of-color 0 pic color-to-count))
 }|
 }
 
