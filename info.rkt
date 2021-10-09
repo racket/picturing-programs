@@ -14,3 +14,6 @@
 (define pkg-desc "Teaching libraries for _Picturing Programs_")
 
 (define pkg-authors '(sbloch))
+
+(define license
+  '(Apache-2.0 OR MIT))
