@@ -86,20 +86,43 @@
       (image-color? thing)))
 
 ; color->color% : does the obvious
-; Note that color% doesn't have an alpha component, so alpha is lost.
+; note: racket/draw color% alpha is a (real-in 0 1)
 (define (color->color% c)
   (if (string? c) 
       c
       (make-object color% 
         (color-red c)
         (color-green c)
-        (color-blue c))))
+        (color-blue c)
+        (/ (color-alpha c) 255))))
 
-; color%->color : does the obvious, with alpha defaulting to full-opaque.
+(module+ test
+  (define c1a (make-color 251 202 153 54))
+  (define c1b (color->color% c1a))
+  (check-expect (send c1b red) 251)
+  (check-within (send c1b alpha) 54/255 1.0e-8) ; stored as inexact
+  )
+
+; color%->color : does the obvious
+; note: we are using the 2htdp/image make-color, so alpha is (integer-in 0 255)
 (define (color%->color c)
   (make-color (send c red)
               (send c green)
-              (send c blue)))
+              (send c blue)
+              (real->int (* 255 (send c alpha)))))
+
+(module+ test
+  (define c2a (make-object color% 105 112 113 0.2))
+  (define c2b (color%->color c2a))
+  (define c2c (make-color 1 2 3 4))
+  (check-expect (color-green c2b) 112)
+  (check-expect (color-alpha c2b) 51)
+  (define c2d (color->color% c2b)) ;; should be the same as c2a
+  (check-expect (send c2d red) (send c2a red))
+  (check-expect (send c2d green) (send c2a green))  
+  (check-expect (send c2d blue) (send c2a blue))
+  (check-within (send c2d alpha) (send c2a alpha) 1.0e-8)
+  (check-expect #true (color=? c2c (color%->color (color->color% c2c)))))
 
 ; name->color : string-or-symbol -> maybe-color
 (define (name->color name)
@@ -120,6 +143,7 @@
          ;; "grey" is normalized to "gray" by normalize-color-string
          (check-expect (name->color "grey") (make-color 190 190 190 255))
          (check-error (name->color 7 "name->color: Expected a string or symbol, but received 7"))
+         (check-expect (color-alpha (name->color "transparent"))  0)
          )
 
 ; colorize : broad-color -> color  -- returns #f for unrecognized names
