@@ -14,3 +14,5 @@
 (define stick-figure (bitmap "pictures/stick-figure.png"))
 (define scheme-logo (bitmap "pictures/schemelogo.png"))
 (define calendar (bitmap "pictures/calendar.png"))
+(define train-engine (bitmap "pictures/train_engine.png"))
+(define train-car (bitmap "pictures/train_car.png"))
