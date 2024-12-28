@@ -86,25 +86,47 @@
       (image-color? thing)))
 
 ; color->color% : does the obvious
-; Note that color% doesn't have an alpha component, so alpha is lost.
 (define (color->color% c)
-  (if (string? c) 
+  (if (string? c)
       c
-      (make-object color% 
+      (make-object color%
         (color-red c)
         (color-green c)
-        (color-blue c))))
+        (color-blue c)
+        (/ (color-alpha c) 255.0))))
+
+(module+ test
+  (check-expect (color->color% (make-color 10 20 30 255))
+                (make-object color% 10 20 30 1.0))
+  (check-expect (color->color% (make-color 100 150 200 153))
+                (make-object color% 100 150 200 0.6))
+)
+
+;; convert-alpha: (real-in 0 1) -> (integer-in 0 255)
+;; change color% alpha to make-color's version of alpha
+;(define (convert-alpha r)
+;  (round (* 255 r)))
 
 ; color%->color : does the obvious, with alpha defaulting to full-opaque.
 (define (color%->color c)
   (make-color (send c red)
               (send c green)
-              (send c blue)))
+              (send c blue)
+              (round (* 255 (send c alpha)))))
+
+(module+ test
+  (check-expect (color%->color (make-object color% 100 150 200 0.49))
+                (make-color 100 150 200 125))
+  (check-expect (color%->color (make-object color% 50 60 70 1.0))
+                (make-color 50 60 70 255))
+  (check-expect (color%->color (make-object color% 0 255 0 0.0))
+                (make-color 0 255 0 0))
+)
 
 ; name->color : string-or-symbol -> maybe-color
 (define (name->color name)
   (unless (or (string? name) (symbol? name))
-    (error 'name->color 
+    (error 'name->color
            (format "Expected a string or symbol, but received ~v" name)))
   (let [[result (string->color-object/f
                  (if (string? name)
@@ -233,7 +255,7 @@
                 (send bm get-argb-pixels 0 0 w h new-bytes)
                 (set! cache (add-and-drop (ib pic new-bytes) cache))
                 new-bytes)))]
-    
+
     (if (and (<= 0 x (sub1 w))
              (<= 0 y (sub1 h)))
         (get-px x y w h bytes)
